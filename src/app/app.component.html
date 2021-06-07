@@ -1,1 +1,2 @@
-<div *ngIf="occupiedBikeSpaces$ | async" class="map" id="map" class="map"></div>
+<ng-container *ngIf="occupiedBikeSpaces$ | async"></ng-container>
+<div class="map" id="map" class="map"></div>

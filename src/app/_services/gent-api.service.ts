@@ -27,7 +27,12 @@ export class GentApiService {
                         return <GeoJSON> {
                             type: 'Feature',
                             properties: <Properties>{
-                                description: `<h1>${record.fields.facilityname}</h1><p>${record.fields.freeplaces} of the ${record.fields.totalplaces} available.</p>`
+                                description: `
+                                    <h1>${record.fields.facilityname}</h1>
+                                    <p>Available: ${record.fields.freeplaces}</p>
+                                    <p>Occupied: ${record.fields.occupiedplaces}</p>
+                                    <p>Total places: ${record.fields.totalplaces}</p>
+                                `
                             },
                             geometry: record.geometry
                         }
