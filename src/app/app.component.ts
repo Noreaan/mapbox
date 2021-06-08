@@ -18,6 +18,7 @@ export class AppComponent implements OnInit {
     style = 'mapbox://styles/mapbox/streets-v11';
     lat = 51.0543;
     lng = 3.7174;
+    layerId = 'occupiedBikeSpace';
 
     occupiedBikeSpaces$: Observable<MapBoxGeoJSON>;
 
@@ -49,25 +50,14 @@ export class AppComponent implements OnInit {
         ).pipe(
             tap((response: MapBoxGeoJSON) => {
                 if (response) {
-                    if (this.map.getSource('occupiedBikeSpace')) {
-                        (this.map.getSource('occupiedBikeSpace') as GeoJSONSource).setData(<GeoJSON.FeatureCollection>response);
-                    } else {
-                        this.map.addSource('occupiedBikeSpace', {
-                            type: 'geojson',
-                            data: <GeoJSON.FeatureCollection>response
-                        });
+                    let geoJSONFeatureCollection = <GeoJSON.FeatureCollection>response;
 
-                        this.map.addLayer({
-                            'id': 'occupiedBikeSpace',
-                            'type': 'circle',
-                            'source': 'occupiedBikeSpace',
-                            'paint': {
-                                'circle-radius': 8,
-                                'circle-stroke-width': 2,
-                                'circle-color': 'red',
-                                'circle-stroke-color': 'white'
-                            }
-                        });
+                    if (this.getSource(this.layerId)) {
+                        this.updateSource(this.layerId, geoJSONFeatureCollection)
+                    } else {
+                        this.addSource(this.layerId, geoJSONFeatureCollection);
+
+                        this.addLayer(this.layerId, this.layerId);
 
                         this.addClickEvents();
                     }
@@ -76,10 +66,39 @@ export class AppComponent implements OnInit {
         );
     }
 
+    addSource(id: string, data: GeoJSON.FeatureCollection) {
+        this.map.addSource(id, {
+            type: 'geojson',
+            data: <GeoJSON.FeatureCollection>data
+        });
+    }
+
+    updateSource(id: string, data: GeoJSON.FeatureCollection) {
+        this.getSource(id).setData(data);
+    }
+
+    getSource(id: string): GeoJSONSource {
+        return this.map.getSource(id) as GeoJSONSource;
+    }
+
+    addLayer(id: string, source: string) {
+        this.map.addLayer({
+            'id': `${id}`,
+            'type': 'circle',
+            'source': `${source}`,
+            'paint': {
+                'circle-radius': 8,
+                'circle-stroke-width': 2,
+                'circle-color': 'red',
+                'circle-stroke-color': 'white'
+            }
+        });
+    }
+
     addClickEvents() {
         this.map.on('click', 'occupiedBikeSpace', (e) => {
             var coordinates = e.lngLat;
-            var description = e.features[0].properties.description;
+            var description = e.features[0].properties?.description;
 
             while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
                 coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
