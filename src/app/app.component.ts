@@ -5,6 +5,8 @@ import { GentApiService } from 'src/app/_services/gent-api.service';
 import { MapBoxGeoJSON } from './_models/mapbox/geoJSON.model';
 import { Observable, Subscription, timer } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { GeoJSONSource } from 'mapbox-gl';
 
 @Component({
     selector: 'app-root',
@@ -46,24 +48,28 @@ export class AppComponent implements OnInit {
             switchMap(() => this.gentApiService.getOccupiedBikeSpaces())
         ).pipe(
             tap((response: MapBoxGeoJSON) => {
-                this.map.addSource('occupiedBikeSpace', {
-                    type: 'geojson',
-                    data: <any>response
-                });
+                if (this.map.getSource('occupiedBikeSpace')) {
+                    (this.map.getSource('occupiedBikeSpace') as GeoJSONSource).setData(<any>response);
+                } else {
+                    this.map.addSource('occupiedBikeSpace', {
+                        type: 'geojson',
+                        data: <any>response
+                    });
 
-                this.map.addLayer({
-                    'id': 'occupiedBikeSpace',
-                    'type': 'circle',
-                    'source': 'occupiedBikeSpace',
-                    'paint': {
-                        'circle-radius': 8,
-                        'circle-stroke-width': 2,
-                        'circle-color': 'red',
-                        'circle-stroke-color': 'white'
-                    }
-                });
+                    this.map.addLayer({
+                        'id': 'occupiedBikeSpace',
+                        'type': 'circle',
+                        'source': 'occupiedBikeSpace',
+                        'paint': {
+                            'circle-radius': 8,
+                            'circle-stroke-width': 2,
+                            'circle-color': 'red',
+                            'circle-stroke-color': 'white'
+                        }
+                    });
 
-                this.addClickEvents();
+                    this.addClickEvents();
+                }
             })
         );
     }
