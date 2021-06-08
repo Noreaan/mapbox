@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { OccupiedBikeSpaces, Record } from '../_models/gent-api/occupied-bike-places.model';
 import { MapBoxGeoJSON, GeoJSON, Properties } from '../_models/mapbox/geoJSON.model';
 
@@ -14,7 +14,7 @@ export class GentApiService {
         private http: HttpClient
     ) { }
 
-    getOccupiedBikeSpaces(): Observable<MapBoxGeoJSON> {
+    getOccupiedBikeSpaces(): Observable<MapBoxGeoJSON> | Observable<any> {
         return this.http.get<OccupiedBikeSpaces>('https://data.stad.gent/api/records/1.0/search/?dataset=real-time-bezettingen-fietsenstallingen-gent&q=&facet=facilityname')
             .pipe(
                 map((result: OccupiedBikeSpaces) => {
@@ -24,7 +24,7 @@ export class GentApiService {
                     };
 
                     mapBoxGeoJSON.features = <GeoJSON[]>result.records.map((record: Record) => {
-                        return <GeoJSON> {
+                        return <GeoJSON>{
                             type: 'Feature',
                             properties: <Properties>{
                                 description: `
@@ -39,6 +39,10 @@ export class GentApiService {
                     });
 
                     return mapBoxGeoJSON;
+                }),
+                catchError((error) => {
+                    console.error('getOccupiedBikeSpaces', error);
+                    return of();
                 })
             );
     }
